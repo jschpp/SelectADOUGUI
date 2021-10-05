@@ -48,9 +48,9 @@ function Select-ADOU {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidAssignmentToAutomaticVariable', '', Justification = "Correct use of sender in the case of WPF sender")]
     [CmdletBinding()]
     param (
-        [Parameter(ValueFromPipeline = $true)]
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
         [String]
-        $SearchBase = "REMOVED"
+        $SearchBase
     )
 
     begin {
