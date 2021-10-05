@@ -27,6 +27,23 @@ function AddOus {
     }
 }
 
+
+<#
+.SYNOPSIS
+A graphical selection tool of AD Organisational Units
+
+.DESCRIPTION
+This cmdlet will open a WPF Window which can be used to select one OU.
+
+.PARAMETER SearchBase
+Searchbase for OU lookup
+
+.EXAMPLE
+PS C:\> Select-ADOU -SearchBase "DC=domain,DC=tld"
+
+.NOTES
+none.
+#>
 function Select-ADOU {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidAssignmentToAutomaticVariable', '', Justification = "Correct use of sender in the case of WPF sender")]
     [CmdletBinding()]
