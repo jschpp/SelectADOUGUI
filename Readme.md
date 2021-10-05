@@ -1,4 +1,3 @@
 # ADOUSelector
 
-Dieses Repository stellt einen WPF OU Selector zur Verfügung
-
+A graphical selection tool of AD Organisational Units
