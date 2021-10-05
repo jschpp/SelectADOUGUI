@@ -1,3 +1,10 @@
+$UsedProperties = @("Name", "DistinguishedName") 
+$OUParams = @{
+    Filter      = "*"
+    Properties  = $UsedProperties
+    SearchScope = "OneLevel"
+}
+
 function NewOu {
     [CmdletBinding()]
     param (
@@ -13,7 +20,7 @@ function NewOu {
 
 function AddOus {
     param($parent)
-    Get-ADOrganizationalUnit -Filter * -Properties * -SearchBase $parent.DistinguishedName -SearchScope OneLevel | ForEach-Object {
+    Get-ADOrganizationalUnit @OUParams -SearchBase $parent.DistinguishedName | Select-Object $UsedProperties | ForEach-Object {
         $current = NewOu $_
         AddOus $current
         $parent.AddChild($current)
@@ -38,8 +45,6 @@ function Select-ADOU {
 	</Grid>
 </Window>
 "@
-        $manager = New-Object System.Xml.XmlNamespaceManager -ArgumentList $xaml.NameTable
-        $manager.AddNamespace("x", "http://schemas.microsoft.com/winfx/2006/xaml")
         $xamlReader = New-Object System.Xml.XmlNodeReader $xaml
         $window = [Windows.Markup.XamlReader]::Load($xamlReader)
 
@@ -56,7 +61,7 @@ function Select-ADOU {
     }
 
     process {
-        Get-ADOrganizationalUnit -Filter * -Properties Name, DistinguishedName -SearchBase $SearchBase -SearchScope OneLevel | Select-Object Name, DistinguishedName | ForEach-Object {
+        Get-ADOrganizationalUnit @OUParams -SearchBase $SearchBase | Select-Object $UsedProperties | ForEach-Object {
             $current = NewOu $_
             AddOus $current
             $treeView.Items.Add($current) | Out-Null
