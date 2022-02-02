@@ -39,12 +39,12 @@ This cmdlet will open a WPF Window which can be used to select one OU.
 Searchbase for OU lookup
 
 .EXAMPLE
-PS C:\> Select-ADOU -SearchBase "DC=domain,DC=tld"
+PS C:\> Select-ADOrganisationalUnit -SearchBase "DC=domain,DC=tld"
 
 .NOTES
 none.
 #>
-function Select-ADOU {
+function Select-ADOrganisationalUnit {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidAssignmentToAutomaticVariable', '', Justification = "Correct use of sender in the case of WPF sender")]
     [CmdletBinding()]
     param (
