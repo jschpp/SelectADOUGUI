@@ -78,10 +78,14 @@ function Select-ADOU {
     }
 
     process {
-        $ous = Get-ADOrganizationalUnit -Filter * -SearchBase $SearchBase | ForEach-Object { NewOu $_ -SearchBase $SearchBase } | Group-Object { $_.Parents.Count } | Sort-Object { [int]$_.Name }
-        $previous = $ous[0].Group | Sort-Object {$_.Header}
+        $ous = Get-ADOrganizationalUnit -Filter * -SearchBase $SearchBase | `
+            ForEach-Object { NewOu $_ -SearchBase $SearchBase } | `
+            Group-Object { $_.Parents.Count } | `
+            Sort-Object { [int]$_.Name }
+        
+        $previous = $ous[0].Group | Sort-Object { $_.Header }
         foreach ($i in 1..($ous.Count - 1)) {
-            $currentGroup = $ous[$i].Group | Sort-Object {$_.Header}
+            $currentGroup = $ous[$i].Group | Sort-Object { $_.Header }
             $currentGroup | ForEach-Object {
                 $CurrentOU = $PSItem
                 Write-Debug -Message ("CurrentOU: <{0}> Parents: <{1}>" -f $CurrentOU.Header, ($CurrentOU.Parents | ConvertTo-Json -Compress))
@@ -94,7 +98,7 @@ function Select-ADOU {
             }
             $previous = $currentGroup
         }
-        $ous[0].Group | Sort-Object {$_.Header} | ForEach-Object { $treeView.Items.Add($_) | Out-Null }
+        $ous[0].Group | Sort-Object { $_.Header } | ForEach-Object { $treeView.Items.Add($_) | Out-Null }
 
         $DialogResult = $window.ShowDialog()
         if ($DialogResult -eq $true) {
