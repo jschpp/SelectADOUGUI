@@ -1,8 +1,15 @@
-$UsedProperties = @("Name", "DistinguishedName") 
-$OUParams = @{
-    Filter      = "*"
-    Properties  = $UsedProperties
-    SearchScope = "OneLevel"
+function SplitDn {
+    param (
+        [Parameter(ValueFromPipeline = $true)]
+        [string]$dn,
+
+        [string]$SearchBase
+    )
+    if ($SearchBase[0] -ne ",") {
+        $SearchBase = ",{0}" -f $SearchBase
+    }
+    $ret = $dn -replace $SearchBase, "" -split "(?<!\\)," | ForEach-Object { $_ -split "=" | Select-Object -Skip 1 }
+    , $ret
 }
 
 function NewOu {
@@ -10,21 +17,14 @@ function NewOu {
     param (
         [Parameter()]
         [Object]
-        $OU
+        $OU,
+        $SearchBase
     )
     $ret = New-Object "System.Windows.Controls.TreeViewItem"
     $ret.Header = $OU.Name
     $ret | Add-Member -TypeName "String" -Value $OU.DistinguishedName -MemberType NoteProperty -Name "DistinguishedName"
+    $ret | Add-Member -MemberType NoteProperty -Value (SplitDn $OU.DistinguishedName -SearchBase $SearchBase) -Name "Parents"
     $ret
-}
-
-function AddOus {
-    param($parent)
-    Get-ADOrganizationalUnit @OUParams -SearchBase $parent.DistinguishedName | Select-Object $UsedProperties | ForEach-Object {
-        $current = NewOu $_
-        AddOus $current
-        $parent.AddChild($current)
-    }
 }
 
 
@@ -78,11 +78,23 @@ function Select-ADOU {
     }
 
     process {
-        Get-ADOrganizationalUnit @OUParams -SearchBase $SearchBase | Select-Object $UsedProperties | ForEach-Object {
-            $current = NewOu $_
-            AddOus $current
-            $treeView.Items.Add($current) | Out-Null
+        $ous = Get-ADOrganizationalUnit -Filter * -SearchBase $SearchBase | ForEach-Object { NewOu $_ -SearchBase $SearchBase } | Group-Object { $_.Parents.Count } | Sort-Object { [int]$_.Name }
+        $previous = $ous[0].Group | Sort-Object {$_.Header}
+        foreach ($i in 1..($ous.Count - 1)) {
+            $currentGroup = $ous[$i].Group | Sort-Object {$_.Header}
+            $currentGroup | ForEach-Object {
+                $CurrentOU = $PSItem
+                Write-Debug -Message ("CurrentOU: <{0}> Parents: <{1}>" -f $CurrentOU.Header, ($CurrentOU.Parents | ConvertTo-Json -Compress))
+                $previous | Where-Object { $_.Header -EQ $CurrentOU.Parents[1] } | ForEach-Object { 
+                    Write-Debug ("Add {0} as child of {1}" -f $CurrentOU.Header, $_.Header )
+                    $CurrentOU.Parents = $CurrentOU.Parents | Select-Object -Skip 1
+                    $_.AddChild($CurrentOU) 
+                }
+                $CurrentOU.Group
+            }
+            $previous = $currentGroup
         }
+        $ous[0].Group | Sort-Object {$_.Header} | ForEach-Object { $treeView.Items.Add($_) | Out-Null }
 
         $DialogResult = $window.ShowDialog()
         if ($DialogResult -eq $true) {
