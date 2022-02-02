@@ -75,10 +75,15 @@ function Select-ADOU {
                 $Window.DialogResult = $true
                 $window.Close()
             })
+        $NeededProperties = @(
+            "DistinguishedName",
+            "Name"
+        )
     }
 
     process {
         $ous = Get-ADOrganizationalUnit -Filter * -SearchBase $SearchBase | `
+            Select-Object $NeededProperties | `
             ForEach-Object { NewOu $_ -SearchBase $SearchBase } | `
             Group-Object { $_.Parents.Count } | `
             Sort-Object { [int]$_.Name }
